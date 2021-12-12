@@ -156,6 +156,8 @@ namespace ForumApplication.Controllers
 
         }
 
+
+        //Delete for me or for everybody
         [HttpPost]
         [Authorize]
         [Route("Delete")]

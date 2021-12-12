@@ -219,8 +219,29 @@ namespace ForumApplication.Controllers
             return BadRequest();
 
         }
+        //Returns the number of events a post has!
+        [HttpGet]
+        [Authorize]
+        [Route("Get/postStatuses/{postId}")]
+        public IActionResult GetPostStatuses(int postId)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-       
+            var post = _context.Posts.Find(postId);
+            if (post.UserId.Equals(userId))
+            {
+                var postEvents = _context.PostEvents.Where(p => p.PostId == postId).Count();
+                return Ok($"Number of postEvents for this post:{postEvents}");
+            }
+            else
+            {
+                return Unauthorized();
+            }
+
+
+        }
+
+
         //Returns the first user commented depending on postId
         [HttpGet]
         [Authorize]
