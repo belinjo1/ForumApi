@@ -88,17 +88,23 @@ namespace ForumApplication.Controllers
         }
 
 
-        //Invite user to a post
+
+        //Invite user to a post and can't invite if the post limit is achieved.
+
         [HttpPost]
         [Authorize]
         [Route("InviteUser")]
         public IActionResult InviteUser([FromBody] PostEvent postEvent)
         {
             _logger.LogInformation($"Attempt to Invite a user");
-            if (postEvent != null)
+            var post = _context.Posts.Find(postEvent.PostId);
+            var eventsList = _context.PostEvents.Where(p => p.PostId == postEvent.PostId).ToList();
+
+            if (postEvent != null && eventsList.Count < post.Limit )
             {
                 postEvent.Status = "Invited";
-                var result = _context.Add(postEvent);
+                _context.Add(postEvent);
+                _context.Posts.Update(post);
                 _context.SaveChanges();
             }
             else
@@ -214,7 +220,50 @@ namespace ForumApplication.Controllers
 
         }
 
+       
+        //Returns the first user commented depending on postId
+        [HttpGet]
+        [Authorize]
+        [Route("Get/FirstUserCommented/{postId}")]
+        public IActionResult FirstUserCommented(int postId)
+        {
 
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var post = _context.Posts.Where(p=>p.UserId.Equals(userId)).First();
+
+            if (post != null && post.UserId.Equals(userId))
+            {
+                var FirstComment = _context.Comments.Where(p => p.PostId == postId).First();
+                var user = _context.Users.Where(p => p.Id.Equals(FirstComment.OwnerId)).FirstOrDefault();
+                return Ok(user);
+                
+            }
+            return BadRequest();
+
+        }
+
+
+        //Returns the last user commented depending on postId
+        [HttpGet]
+        [Authorize]
+        [Route("Get/LastUserCommented/{postId}")]
+        public IActionResult LastUserCommented(int postId)
+        {
+
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var post = _context.Posts.Where(p => p.UserId.Equals(userId)).First();
+
+            if (post != null && post.UserId.Equals(userId))
+            {
+                var comments = _context.Comments.Where(p => p.PostId == postId).ToList();
+                var LastComment = comments.Last();
+                var user = _context.Users.Where(p => p.Id.Equals(LastComment.OwnerId)).FirstOrDefault();
+                return Ok(user);
+
+            }
+            return BadRequest();
+
+        }
 
     }
 }

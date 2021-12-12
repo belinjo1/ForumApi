@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -113,7 +114,40 @@ namespace ForumApplication.Controllers
            
         }
 
-        //Here goes the delete Comment action
+
+
+        //Returns the comment with most replies/reactions!
+        [HttpGet]
+        [Authorize]
+        [Route("Get/PopularComment")]
+        public IActionResult CommentWithMaxReactions()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            var comments = _context.Comments.Include(p=>p.Replies).Where(p => p.OwnerId.Equals(userId)).ToList();
+
+            if(comments == null)
+            {
+                _logger.LogInformation("There is no comment by this user yet!");
+                return BadRequest("No comments from this user yet!");
+            }
+            else
+            {
+                var result = comments.FirstOrDefault();
+                var max = 0;
+
+                foreach (Comment c in comments)
+                {
+                    if (c.Replies.Count >= max)
+                    {
+                        max = c.Replies.Count;
+                        result = c;
+                    }
+                }
+                return Ok(result);
+            }           
+
+        }
 
     }
 
