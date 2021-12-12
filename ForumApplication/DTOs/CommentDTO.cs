@@ -19,4 +19,12 @@ namespace ForumApplication.DTOs
         public string CommentText { get; set; }    
         public int PostId { get; set; }
     }
+
+    public class DeleteCommentDTO
+    {
+        [Required]
+        public int CommentId { get; set; }
+        [Required]
+        public bool DeleteForMe { get; set; }
+    }
 }

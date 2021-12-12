@@ -77,37 +77,44 @@ namespace ForumApplication.Controllers
         
         //Gets comments but also checks if the post is private or not (Reads Comments)
         //Only users that have accepted the invite to a private post, can read/get comments from that post
+        //Users cannot see Comments that they deleted for themselves!
         [HttpGet]
         [Authorize]
         [Route("Get/{postId}")]
         public  IActionResult GetCommentsByPost(int postId)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            
+            var DeletedForMe = _context.CommentsDeletedForMe.Where(p => p.UserId.Equals(userId)).ToList();            
             var postt = _context.Posts.Find(postId);
             
-            Post post = new Post
-            {
-                Id = postt.Id,
-                IsPrivate = postt.IsPrivate
-            };
 
-            if (post.IsPrivate == true)
-            {
-               
-              foreach(InvitedToPost user in _context.UsersInvitedToPosts)
-                {
-                    if(user.PostId == post.Id && user.UserId.Equals(userId)){
-                        var commentsInPrivate = _context.Comments.Where(a => a.PostId == postId).ToList();
-                        return Ok(commentsInPrivate);
+            if (postt.IsPrivate == true && !postt.UserId.Equals(userId))
+            {              
+                    foreach (InvitedToPost user in _context.UsersInvitedToPosts)
+                    {
+                        if (user.PostId == postt.Id && user.UserId.Equals(userId))
+                        {
+                            var commentsInPrivate = _context.Comments.Where(a => a.PostId == postId).ToList();
+                            return Ok(commentsInPrivate);
+                        }
                     }
-                }
-    
-            }
+                }           
             else
             {
-                var commentsInPublic = _context.Comments.ToList();
-                return Ok(commentsInPublic);
+                var commentsInPublic = _context.Comments.Where(p=>p.PostId==postt.Id).ToList();
+                List<Comment> list = new List<Comment>();
+                foreach (Comment c in commentsInPublic)
+                {
+                    foreach(DeleteForMyself dm in DeletedForMe)
+                    {
+                        if(c.Id != dm.CommentId && !c.OwnerId.Equals(dm.UserId))
+                        {
+                            list.Add(c);
+                        }
+                    }
+                }
+              
+                return Ok(list);
             }
 
             return BadRequest();
@@ -146,6 +153,51 @@ namespace ForumApplication.Controllers
                 }
                 return Ok(result);
             }           
+
+        }
+
+        [HttpPost]
+        [Authorize]
+        [Route("Delete")]
+        public IActionResult Delete([FromBody] DeleteCommentDTO commentDTO)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            var comment = _context.Comments.Include(p => p.Replies)
+                .Where(p => p.OwnerId.Equals(userId) && p.Id == commentDTO.CommentId).FirstOrDefault();
+
+            if (comment == null)
+            {
+                _logger.LogInformation("There is no comment by this user yet!");
+                return BadRequest("No comments from this user yet!");
+            }
+            else
+            {
+                try
+                {
+                    if(commentDTO.DeleteForMe == true)
+                    {
+                        DeleteForMyself dM = new DeleteForMyself
+                        {
+                            UserId = userId,
+                            CommentId = commentDTO.CommentId
+                        };
+                        _context.CommentsDeletedForMe.Add(dM);
+                        _context.SaveChanges();
+                    }
+                    else
+                    {
+                        _context.Comments.Remove(comment);
+                        _context.SaveChanges();
+                    }
+                }
+                catch(Exception ex)
+                {
+                    _logger.LogError(ex, $"Something went wrong in the {nameof(Delete)}");
+                    return StatusCode(500, $"Something went wrong in the {nameof(Delete)}!");
+                }
+            }
+            return Accepted();
 
         }
 

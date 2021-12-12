@@ -13,10 +13,10 @@ namespace ForumApplication.Models
         public int Id { get; set; }
         public string CommentText { get; set; }
         public string OwnerId { get; set; }
+        public User Owner { get; set; }
         public int PostId { get; set; }
         public Post Post { get; set; }
-        public  ICollection<Reply> Replies { get; set; }
-        public User Owner { get; set; }
-
+        public  ICollection<Reply> Replies { get; set; }  
+        public ICollection<DeleteForMyself> CommentsDeletedForMe { get; set; }
     }
 }

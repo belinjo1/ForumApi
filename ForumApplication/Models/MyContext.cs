@@ -20,15 +20,15 @@ namespace ForumApplication.Models
         public DbSet<Reply> Replies { get; set; }
         public DbSet<InvitedToPost> UsersInvitedToPosts { get; set; }
         public DbSet<PostEvent> PostEvents { get; set; }
+        public DbSet<DeleteForMyself> CommentsDeletedForMe { get; set; }
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
 
             builder.Entity<InvitedToPost>().HasKey(sc => new { sc.UserId, sc.PostId });
             builder.Entity<PostEvent>().HasKey(sc => new { sc.UserId, sc.PostId });
+            builder.Entity<DeleteForMyself>().HasKey(sc => new { sc.UserId, sc.CommentId });
 
-
-  
         }
      
       

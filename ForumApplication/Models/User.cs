@@ -12,5 +12,6 @@ namespace ForumApplication.Models
         public string LastName { get; set; }
         public ICollection<InvitedToPost> UsersInvitedToPost { get; set; }
         public ICollection<PostEvent> PostEvents { get; set; }
+        public ICollection<DeleteForMyself> CommentsDeletedForMe { get; set; }
     }
 }
