@@ -200,7 +200,7 @@ namespace ForumApplication.Controllers
      
         }
 
-        //Returns all posts where logged in user is invited
+        //Number of comments for post
         [HttpGet]
         [Authorize]
         [Route("NumberOfComments/{postId}")]
