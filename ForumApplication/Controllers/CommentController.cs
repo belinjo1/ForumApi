@@ -91,9 +91,14 @@ namespace ForumApplication.Controllers
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var DeletedForMe = _context.CommentsDeletedForMe.Where(p => p.UserId.Equals(userId)).ToList();            
             var postt = _context.Posts.Find(postId);
-            
 
-            if (postt.IsPrivate == true && !postt.UserId.Equals(userId))
+
+            if (userId.Equals(postt.UserId))
+            {
+                var commentss = _context.Comments.Where(a => a.PostId == postId).ToList();
+                return Ok(commentss);
+            }
+            else if (postt.IsPrivate == true)
             {              
                     foreach (InvitedToPost user in _context.UsersInvitedToPosts)
                     {
