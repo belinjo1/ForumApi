@@ -104,7 +104,6 @@ namespace ForumApplication.Controllers
             {
                 postEvent.Status = "Invited";
                 _context.Add(postEvent);
-                _context.Posts.Update(post);
                 _context.SaveChanges();
             }
             else
@@ -129,7 +128,7 @@ namespace ForumApplication.Controllers
                     _context.Remove(removeEvent);
                     _context.SaveChanges();
                 }
-                else if(removeEvent.Status.Equals("Invited"))
+                else if(removeEvent.Status.Equals("Accepted"))
                 {
                     _context.Remove(removeEvent);
                     InvitedToPost a = new InvitedToPost

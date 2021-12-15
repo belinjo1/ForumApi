@@ -38,6 +38,7 @@ namespace ForumApplication.Controllers
         public IActionResult CreateComment([FromBody] CommentDTO commentDTO)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userInvited = _context.UsersInvitedToPosts.Where(p => p.UserId.Equals(userId) && p.PostId == commentDTO.PostId).FirstOrDefault();
             _logger.LogInformation($"Id of user attempting : {userId}");
             _logger.LogInformation($"Creation Attempt for {commentDTO.CommentText}");
             if (!ModelState.IsValid)
@@ -50,6 +51,10 @@ namespace ForumApplication.Controllers
                 if (post.IsClosed)
                 {
                     return BadRequest("Post is Closed!, Can't Comment");
+                }
+                else if(post.IsPrivate && userInvited == null)
+                {
+                    return BadRequest("Not authorized");
                 }
                 else
                 {
