@@ -126,8 +126,10 @@ namespace ForumApplication.Controllers
               
                 return Ok(list);
             }
-
-            return BadRequest();
+   
+                return BadRequest();
+           
+      
            
         }
 

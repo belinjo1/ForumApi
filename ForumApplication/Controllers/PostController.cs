@@ -96,11 +96,12 @@ namespace ForumApplication.Controllers
         [Route("InviteUser")]
         public IActionResult InviteUser([FromBody] PostEvent postEvent)
         {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             _logger.LogInformation($"Attempt to Invite a user");
             var post = _context.Posts.Find(postEvent.PostId);
             var eventsList = _context.PostEvents.Where(p => p.PostId == postEvent.PostId).ToList();
 
-            if (postEvent != null && eventsList.Count < post.Limit )
+            if (postEvent != null && eventsList.Count < post.Limit && userId.Equals(post.UserId))
             {
                 postEvent.Status = "Invited";
                 _context.Add(postEvent);
@@ -120,15 +121,17 @@ namespace ForumApplication.Controllers
         [Route("DeleteInvitation")]
         public IActionResult DeleteInvitation([FromBody] PostEvent removeEvent)
         {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var post = _context.Posts.Find(removeEvent.PostId);
             _logger.LogInformation($"Attempt to Remove an Invitation");
             if (removeEvent != null)
             {
-                if (removeEvent.Status.Equals("Invited"))
+                if (removeEvent.Status.Equals("Invited") && userId.Equals(post.UserId))
                 {
                     _context.Remove(removeEvent);
                     _context.SaveChanges();
                 }
-                else if(removeEvent.Status.Equals("Accepted"))
+                else if(removeEvent.Status.Equals("Accepted") && userId.Equals(post.UserId))
                 {
                     _context.Remove(removeEvent);
                     InvitedToPost a = new InvitedToPost
@@ -138,6 +141,10 @@ namespace ForumApplication.Controllers
                     };
                     _context.Remove(a);
                     _context.SaveChanges();
+                }
+                else
+                {
+                    return BadRequest();
                 }
                 
             }
