@@ -43,7 +43,7 @@ namespace ForumApplication.Controllers
             var postClosed = _context.Posts.Find(postId).IsClosed;
             var postPrivate = _context.Posts.Find(postId).IsPrivate;
             var postOwner = _context.Posts.Find(postId).UserId;
-            var personInvited = _context.PostEvents.Where(p => p.PostId == postId && p.UserId.Equals(userId)).FirstOrDefault();
+            var personInvited = _context.UsersInvitedToPosts.Where(p => p.UserId.Equals(userId) && p.PostId == postId).FirstOrDefault();
 
             try
             {
@@ -98,7 +98,7 @@ namespace ForumApplication.Controllers
                     _logger.LogError(ex, $"Something went wrong in the {nameof(CreateReply)}");
                     return StatusCode(500, $"Something went wrong in the {nameof(CreateReply)}!");
                 }
-            return Accepted();
+            return Unauthorized();
                      
         }
           
